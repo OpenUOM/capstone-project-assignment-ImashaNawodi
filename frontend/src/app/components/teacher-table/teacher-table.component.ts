@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationExtras } from '@angular/router';
 import { faTrash, faPlus, faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { AppServiceService } from '../../app-service.service';
+
 @Component({
   selector: 'app-teacher-table',
   templateUrl: './teacher-table.component.html',
@@ -12,8 +13,10 @@ export class TeacherTableComponent implements OnInit {
   faTrash = faTrash;
   faPlus = faPlus;
   faPenSquare = faPenSquare;
-  teacherData: any;
-  selected: any;
+
+  teacherData: any[] = [];
+  filteredData: any[] = []; 
+  selected: string = '';
 
   constructor(private service: AppServiceService, private router: Router) { }
 
@@ -21,64 +24,53 @@ export class TeacherTableComponent implements OnInit {
     this.getTeacherData();
   }
 
-  addNewTeacher() {
-    this.router.navigate(['addTeacher'])
+  addNewTeacher(): void {
+    this.router.navigate(['addTeacher']);
   }
 
-  editTeacher(id) {
+  editTeacher(id: string): void {
     const navigationExtras: NavigationExtras = {
-      state: {
-        id: id
-      }
+      state: { id }
     };
-    this.router.navigate(['editTeacher'], navigationExtras)
+    this.router.navigate(['editTeacher'], navigationExtras);
   }
 
-  initializeDB(){
-    this.service.initializeDB().subscribe((response) => {
-      console.log('DB is Initialized')
-    }, (error) => {
-      console.log('ERROR - ', error)
-    })
+  initializeDB(): void {
+    this.service.initializeDB().subscribe(
+      () => console.log('DB is Initialized'),
+      (error) => console.error('ERROR - ', error)
+    );
   }
 
-  getTeacherData() {
+  getTeacherData(): void {
     this.selected = 'Teachers';
-    this.service.getTeacherData().subscribe((response) => {
-      this.teacherData = Object.keys(response).map((key) => [response[key]]);
-    }, (error) => {
-      console.log('ERROR - ', error)
-    })
+    this.service.getTeacherData().subscribe(
+      (response) => {
+        this.teacherData = Object.keys(response).map((key) => response[key]);
+        this.filteredData = [...this.teacherData]; 
+      },
+      (error) => console.error('ERROR - ', error)
+    );
   }
 
-  getStudentData() {
-    this.selected = 'Students';
-    this.service.getStudentData().subscribe((response) => {
-      this.teacherData = response;
-    }, (error) => {
-      console.log('ERROR - ', error)
-    })
-  }
-
-  search(value) {
-    let foundItems = [];
-    if (value.length <= 0) {
-      this.getTeacherData();
-    } else {
-      foundItems = this.teacherData.filter((teacher) => {
-        return teacher[0].name.toLowerCase().includes(value.toLowerCase());
-      });
-      this.teacherData = foundItems;
+  search(value: string): void {
+    if (value.trim().length === 0) {
+      this.filteredData = [...this.teacherData];
+      return;
     }
-  }
-  
 
-  deleteTeacher(itemid) {
-    const test = {
-      id: itemid
-    }
-    this.service.deleteTeacher(test).subscribe((response) => {
-      this.getTeacherData()
-    })
+    const lowerCaseValue = value.toLowerCase();
+    this.filteredData = this.teacherData.filter((item) => {
+      const name = item?.name?.toLowerCase();
+      return name && name.includes(lowerCaseValue);
+    });
+  }
+
+  deleteTeacher(itemid: string): void {
+    const requestPayload = { id: itemid };
+    this.service.deleteTeacher(requestPayload).subscribe(
+      () => this.getTeacherData(),
+      (error) => console.error('ERROR - ', error)
+    );
   }
 }
