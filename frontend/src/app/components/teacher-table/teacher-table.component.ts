@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationExtras } from '@angular/router';
 import { faTrash, faPlus, faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { AppServiceService } from '../../app-service.service';
-
 @Component({
   selector: 'app-teacher-table',
   templateUrl: './teacher-table.component.html',
@@ -13,10 +12,8 @@ export class TeacherTableComponent implements OnInit {
   faTrash = faTrash;
   faPlus = faPlus;
   faPenSquare = faPenSquare;
-
-  teacherData: any[] = [];
-  filteredData: any[] = []; 
-  selected: string = '';
+  teacherData: any;
+  selected: any;
 
   constructor(private service: AppServiceService, private router: Router) { }
 
@@ -24,53 +21,56 @@ export class TeacherTableComponent implements OnInit {
     this.getTeacherData();
   }
 
-  addNewTeacher(): void {
-    this.router.navigate(['addTeacher']);
+  addNewTeacher() {
+    this.router.navigate(['addTeacher'])
   }
 
-  editTeacher(id: string): void {
+  editTeacher(id) {
     const navigationExtras: NavigationExtras = {
-      state: { id }
+      state: {
+        id: id
+      }
     };
-    this.router.navigate(['editTeacher'], navigationExtras);
+    this.router.navigate(['editTeacher'], navigationExtras)
   }
 
-  initializeDB(): void {
-    this.service.initializeDB().subscribe(
-      () => console.log('DB is Initialized'),
-      (error) => console.error('ERROR - ', error)
-    );
+  initializeDB(){
+    this.service.initializeDB().subscribe((response) => {
+      console.log('DB is Initialized')
+    }, (error) => {
+      console.log('ERROR - ', error)
+    })
   }
 
-  getTeacherData(): void {
+  getTeacherData() {
     this.selected = 'Teachers';
-    this.service.getTeacherData().subscribe(
-      (response) => {
-        this.teacherData = Object.keys(response).map((key) => response[key]);
-        this.filteredData = [...this.teacherData]; 
-      },
-      (error) => console.error('ERROR - ', error)
-    );
+    this.service.getTeacherData().subscribe((response) => {
+      this.teacherData = Object.keys(response).map((key) => [response[key]]);
+    }, (error) => {
+      console.log('ERROR - ', error)
+    })
   }
 
-  search(value: string): void {
-    if (value.trim().length === 0) {
-      this.filteredData = [...this.teacherData];
-      return;
+  search(value) {
+    let foundItems = [];
+    if (value.length <= 0) {
+      this.getTeacherData();
+    } else {
+      let b = this.teacherData.filter((teacher) => {
+        if (teacher[0].name.toLowerCase().indexOf(value) > -1) {
+          foundItems.push(teacher)
+        }
+      });
+      this.teacherData = foundItems;
     }
-
-    const lowerCaseValue = value.toLowerCase();
-    this.filteredData = this.teacherData.filter((item) => {
-      const name = item?.name?.toLowerCase();
-      return name && name.includes(lowerCaseValue);
-    });
   }
 
-  deleteTeacher(itemid: string): void {
-    const requestPayload = { id: itemid };
-    this.service.deleteTeacher(requestPayload).subscribe(
-      () => this.getTeacherData(),
-      (error) => console.error('ERROR - ', error)
-    );
+  deleteTeacher(itemid) {
+    const test = {
+      id: itemid
+    }
+    this.service.deleteTeacher(test).subscribe((response) => {
+      this.getTeacherData()
+    })
   }
-}
+} 
