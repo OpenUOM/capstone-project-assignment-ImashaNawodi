@@ -51,27 +51,19 @@ export class TeacherTableComponent implements OnInit {
     })
   }
 
-  getStudentData() {
-    this.selected = 'Students';
-    this.service.getStudentData().subscribe((response) => {
-      this.teacherData = response;
-    }, (error) => {
-      console.log('ERROR - ', error)
-    })
-  }
-
   search(value) {
     let foundItems = [];
     if (value.length <= 0) {
       this.getTeacherData();
     } else {
-      foundItems = this.teacherData.filter((teacher) => {
-        return teacher[0].name.toLowerCase().includes(value.toLowerCase());
+      let b = this.teacherData.filter((teacher) => {
+        if (teacher[0].name.toLowerCase().indexOf(value) > -1) {
+          foundItems.push(teacher)
+        }
       });
       this.teacherData = foundItems;
     }
   }
-  
 
   deleteTeacher(itemid) {
     const test = {
@@ -81,4 +73,4 @@ export class TeacherTableComponent implements OnInit {
       this.getTeacherData()
     })
   }
-}
+} 
